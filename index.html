@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Join Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            background-color: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .instructions-button {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #ff7043;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .instructions {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: #fff3e0;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .instructions h3 {
+            color: #ff7043;
+            margin-top: 0;
+        }
+        .instructions ol {
+            padding-left: 20px;
+            margin-bottom: 10px;
+        }
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        .instructions p {
+            margin: 0;
+            font-style: italic;
+        }
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .area {
+            flex: 1;
+            padding: 20px;
+            border-right: 1px solid #ccc;
+            overflow-y: auto;
+        }
+        .area:last-child {
+            border-right: none;
+        }
+        h2 {
+            color: #444;
+        }
+        textarea {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .data-display {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .title-row {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+        select, button {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+        }
+        #sqlCode {
+            background-color: #f0f0f0;
+            padding: 10px;
+            white-space: pre-wrap;
+        }
+        #joinResultMessage {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        #visualizationCanvas {
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SQL Join Visualizer</h1>
+        <button class="instructions-button" id="instructionsButton">How to use</button>
+        <div class="instructions" id="instructions">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Enter data for Table A and Table B. The first row will be treated as column titles.</li>
+                <li>Use comma-separated values for columns and new lines for rows.</li>
+                <li>Select the desired join type and key columns for joining (or use "All Keys").</li>
+                <li>Click "Perform Join" to see the result.</li>
+                <li>The sample SQL code for the selected join will be displayed in the Selection area.</li>
+            </ol>
+            <p>Note: Use 'NULL' (uppercase) to represent missing values in your data.</p>
+        </div>
+    </div>
+    <div class="main-content">
+        <div class="area" id="tableA-area">
+            <h2>Table A</h2>
+            <textarea id="tableAInput" rows="5" placeholder="Enter comma-separated values, one row per line"></textarea>
+            <button id="updateTableABtn">Update Table A</button>
+            <div id="tableADisplay" class="data-display"></div>
+        </div>
+
+        <div class="area" id="tableB-area">
+            <h2>Table B</h2>
+            <textarea id="tableBInput" rows="5" placeholder="Enter comma-separated values, one row per line"></textarea>
+            <button id="updateTableBBtn">Update Table B</button>
+            <div id="tableBDisplay" class="data-display"></div>
+        </div>
+
+        <div class="area" id="selection-area">
+            <h2>Join Selection</h2>
+            <select id="joinType">
+                <option value="inner">Inner Join</option>
+                <option value="left">Left Join</option>
+                <option value="right">Right Join</option>
+                <option value="full">Full Outer Join</option>
+                <option value="cross">Cross Join</option>
+                <option value="self">Self Join</option>
+                <option value="union">Union</option>
+                <option value="intersect">Intersect</option>
+                <option value="except">Except</option>
+                <option value="natural">Natural Join</option>
+                <option value="left_semi">Left Semi Join</option>
+                <option value="right_semi">Right Semi Join</option>
+                <option value="anti">Anti Join</option>
+            </select>
+            <div class="key-selection">
+                <h3>Join Key for Table A:</h3>
+                <select id="keyA">
+                    <option value="all" selected>All Keys</option>
+                </select>
+            </div>
+            <div class="key-selection">
+                <h3>Join Key for Table B:</h3>
+                <select id="keyB">
+                    <option value="all" selected>All Keys</option>
+                </select>
+            </div>
+            <button id="performJoinBtn">Perform Join</button>
+            <button id="exportBtn">Export Result as CSV</button>
+            <h3>Sample SQL Code:</h3>
+            <pre id="sqlCode"></pre>
+        </div>
+
+        <div class="area" id="result-area">
+            <h2>Join Result</h2>
+            <div id="joinResultMessage"></div>
+            <div id="joinResultDisplay" class="data-display"></div>
+            <canvas id="visualizationCanvas" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
