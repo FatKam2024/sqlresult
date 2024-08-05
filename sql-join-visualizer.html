@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Join Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        input, select, button {
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #joinImage {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SQL Join Visualizer</h1>
+        
+        <h2>Table A</h2>
+        <input type="text" id="tableAInput" placeholder="Enter comma-separated values">
+        <button onclick="addToTable('A')">Add to Table A</button>
+        <table id="tableA"></table>
+        
+        <h2>Table B</h2>
+        <input type="text" id="tableBInput" placeholder="Enter comma-separated values">
+        <button onclick="addToTable('B')">Add to Table B</button>
+        <table id="tableB"></table>
+        
+        <h2>Select Join Type</h2>
+        <select id="joinType" onchange="updateJoinImage()">
+            <option value="inner">Inner Join</option>
+            <option value="left">Left Join</option>
+            <option value="right">Right Join</option>
+            <option value="full">Full Outer Join</option>
+            <option value="cross">Cross Join</option>
+        </select>
+        <img id="joinImage" src="" alt="Join visualization">
+        
+        <button onclick="performJoin()">Perform Join</button>
+        
+        <h2>Join Result</h2>
+        <table id="joinResult"></table>
+    </div>
+
+    <script>
+        let tableA = [];
+        let tableB = [];
+
+        function addToTable(tableName) {
+            const input = document.getElementById(`table${tableName}Input`).value;
+            const values = input.split(',').map(val => val.trim());
+            
+            if (tableName === 'A') {
+                tableA.push(values);
+            } else {
+                tableB.push(values);
+            }
+            
+            updateTable(tableName);
+            document.getElementById(`table${tableName}Input`).value = '';
+        }
+
+        function updateTable(tableName) {
+            const table = document.getElementById(`table${tableName}`);
+            table.innerHTML = '';
+            const data = tableName === 'A' ? tableA : tableB;
+            
+            if (data.length > 0) {
+                const headerRow = table.insertRow();
+                for (let i = 0; i < data[0].length; i++) {
+                    const th = document.createElement('th');
+                    th.textContent = `Column ${i + 1}`;
+                    headerRow.appendChild(th);
+                }
+                
+                for (const row of data) {
+                    const newRow = table.insertRow();
+                    for (const cell of row) {
+                        const newCell = newRow.insertCell();
+                        newCell.textContent = cell;
+                    }
+                }
+            }
+        }
+
+        function updateJoinImage() {
+            const joinType = document.getElementById('joinType').value;
+            const imageUrls = {
+                'inner': 'https://i.imgur.com/VITcPBh.png',
+                'left': 'https://i.imgur.com/qw0MrMK.png',
+                'right': 'https://i.imgur.com/rorvmjp.png',
+                'full': 'https://i.imgur.com/HIWh9Ib.png',
+                'cross': 'https://i.imgur.com/7c0s5XQ.png'
+            };
+            document.getElementById('joinImage').src = imageUrls[joinType];
+        }
+
+        function performJoin() {
+            const joinType = document.getElementById('joinType').value;
+            let result = [];
+            
+            switch (joinType) {
+                case 'inner':
+                    result = innerJoin(tableA, tableB);
+                    break;
+                case 'left':
+                    result = leftJoin(tableA, tableB);
+                    break;
+                case 'right':
+                    result = rightJoin(tableA, tableB);
+                    break;
+                case 'full':
+                    result = fullOuterJoin(tableA, tableB);
+                    break;
+                case 'cross':
+                    result = crossJoin(tableA, tableB);
+                    break;
+            }
+            
+            updateJoinResultTable(result);
+        }
+
+        function innerJoin(tableA, tableB) {
+            // Simplified inner join based on the first column
+            return tableA.filter(rowA => 
+                tableB.some(rowB => rowA[0] === rowB[0])
+            ).map(rowA => {
+                const rowB = tableB.find(rowB => rowA[0] === rowB[0]);
+                return [...rowA, ...rowB.slice(1)];
+            });
+        }
+
+        function leftJoin(tableA, tableB) {
+            return tableA.map(rowA => {
+                const rowB = tableB.find(rowB => rowA[0] === rowB[0]);
+                return rowB ? [...rowA, ...rowB.slice(1)] : [...rowA, ...Array(tableB[0].length - 1).fill('NULL')];
+            });
+        }
+
+        function rightJoin(tableA, tableB) {
+            return tableB.map(rowB => {
+                const rowA = tableA.find(rowA => rowB[0] === rowA[0]);
+                return rowA ? [...rowA, ...rowB.slice(1)] : [...Array(tableA[0].length).fill('NULL'), ...rowB];
+            });
+        }
+
+        function fullOuterJoin(tableA, tableB) {
+            const left = leftJoin(tableA, tableB);
+            const right = rightJoin(tableA, tableB).filter(rowR => 
+                !tableA.some(rowA => rowA[0] === rowR[tableA[0].length])
+            );
+            return [...left, ...right];
+        }
+
+        function crossJoin(tableA, tableB) {
+            return tableA.flatMap(rowA => 
+                tableB.map(rowB => [...rowA, ...rowB])
+            );
+        }
+
+        function updateJoinResultTable(result) {
+            const table = document.getElementById('joinResult');
+            table.innerHTML = '';
+            
+            if (result.length > 0) {
+                const headerRow = table.insertRow();
+                for (let i = 0; i < result[0].length; i++) {
+                    const th = document.createElement('th');
+                    th.textContent = `Column ${i + 1}`;
+                    headerRow.appendChild(th);
+                }
+                
+                for (const row of result) {
+                    const newRow = table.insertRow();
+                    for (const cell of row) {
+                        const newCell = newRow.insertCell();
+                        newCell.textContent = cell;
+                    }
+                }
+            }
+        }
+
+        // Initialize join image
+        updateJoinImage();
+    </script>
+</body>
+</html>
